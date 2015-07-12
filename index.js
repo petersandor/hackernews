@@ -7,6 +7,7 @@ var FeedParser = require('feedparser')
   , colors = require('colors')
   , prompt = require('prompt')
   , exec = require('child_process').exec
+  , meow = require('meow')
   , platform = require('os').platform();
 
 const shellOpenCommand = {
@@ -15,11 +16,29 @@ const shellOpenCommand = {
   'darwin': 'open '
 }[platform];
 
+const defaults = {
+  'limit': 29
+};
+
 const hnUrls = {
   'item': 'https://news.ycombinator.com/item?id='
 };
 
-hackerNews.getHottestItems(28, function(err, items) {
+var cli = meow({
+  help: [
+    'Usage',
+    '  $ hn <option> [parameters]',
+    '',
+    'Examples of usage',
+    '  $ hn --limit 10',
+    '',
+    'Options',
+    '  --limit n  # Displays first n hottest posts.  Default: 29',
+    '  --version  # Displays package version.',
+  ]
+});
+
+hackerNews.getHottestItems(getLimit(), function(err, items) {
   if (err) {
     throw err;
   }
@@ -27,6 +46,13 @@ hackerNews.getHottestItems(28, function(err, items) {
   posts = items.slice();
   async.each(posts, printPostTitle, promptForPost);
 });
+
+function getLimit() {
+  return isNaN(cli.flags.limit)
+    || !cli.flags.limit
+    ? defaults.limit
+    : cli.flags.limit;
+}
 
 function printPostTitle(post, next) {
   console.log((posts.indexOf(post) + 1).toString().red + ". " + post.title);
