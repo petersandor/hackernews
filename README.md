@@ -17,17 +17,33 @@ Before installation you will need node/npm installed.
 
 
     sudo npm install -g hacker-news-cli
-    
+
 ##Usage
 
 The global installation will symlink an executable script and place it in your PATH. To use with hacker news simply type:
 
     hn
-    
+
+or use `--help` to show available options:
+
+    hn --help
+
+    A command line tool to print out the latest posts on Hacker News to your terminal.
+
+    Usage
+    $ hn <option> [parameters]
+
+    Examples of usage
+    $ hn --limit 10
+
+    Options
+    --limit n  # Displays first n hottest posts.  Default:  29
+    --version  # Displays package version.
+
 or for designer news:
 
     dn
-    
+
 You will then be prompted to open a post. Type the number of the post to open a post or type 0 to quit and return to your terminal session.
 
 ##Version history
