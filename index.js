@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 var FeedParser = require('feedparser')
-  , request = require('request')
+  , async = require('async')
   , posts = []
+  , hackerNews = require("node-hacker-news")()
   , colors = require('colors')
   , prompt = require('prompt')
   , exec = require('child_process').exec
-  , platform = require('os').platform()
-  , i = 1;
+  , platform = require('os').platform();
 
 const shellOpenCommand = {
   'win32': 'start ',
@@ -15,24 +15,31 @@ const shellOpenCommand = {
   'darwin': 'open '
 }[platform];
 
-request('https://news.ycombinator.com/rss')
-  .pipe(new FeedParser())
-  .on('error', function(error) {
-    console.log("An error occured");
-  })
-  .on('readable', function () {
-    var stream = this, item;
-    if(i < 29){
-      while (item = stream.read()) {
-      posts.push(item);
-      console.log(i.toString().red + ". " + item.title);
-      i++;
-    }
-    }
-  })
-  .on('finish', function(){
-    promptForPost();
+const hnUrls = {
+  'item': 'https://news.ycombinator.com/item?id='
+};
+
+hackerNews.getHottestItems(28, function(err, items) {
+  if (err) {
+    throw err;
+  }
+
+  posts = items.slice();
+  async.each(posts, printPostTitle, promptForPost);
+});
+
+function printPostTitle(post, next) {
+  console.log((posts.indexOf(post) + 1).toString().red + ". " + post.title);
+  next();
+}
+
+function openPost(post) {
+  var url = post.url.length ? post.url : hnUrls.item + post.id;
+
+  exec(shellOpenCommand + url, function(error) {
+    if(error) throw error;
   });
+}
 
 function promptForPost() {
   prompt.start();
@@ -52,9 +59,7 @@ function promptForPost() {
       if(isNaN(i) || i > posts.length || i < 1) {
         console.log("Invalid post number");
       } else {
-        exec(shellOpenCommand + posts[i - 1].link, function(error){
-          if(error) throw error;
-        });
+        openPost(posts[i - 1]);
       }
       promptForPost();
     }
